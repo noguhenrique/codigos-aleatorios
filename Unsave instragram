@@ -1,0 +1,44 @@
+// Codigo para remover os salvos do instagram
+// https://www.instagram.com/rheinque/saved/all-posts/
+// abrir uma postagem em aba completa, permitindo passar para a príxma
+
+// Função para clicar no botão de unsave
+function unsavePost() {
+    // Seleciona o botão de "Remover" (unsave)
+    const unsaveButton = document.querySelector('svg[aria-label="Remover"]');
+    if (unsaveButton) {
+        unsaveButton.parentElement.click(); // Clica no botão
+        console.log("Post desmarcado (unsave)!");
+        return true;
+    } else {
+        console.log("Botão de unsave não encontrado.");
+        return false;
+    }
+}
+
+// Função para clicar no botão de próximo post
+function nextPost() {
+    // Seleciona o botão de avançar pelo aria-label "Avançar"
+    const nextButton = document.querySelector('svg[aria-label="Avançar"]');
+    if (nextButton) {
+        nextButton.parentElement.click(); // Clica no botão
+        console.log("Próximo post...");
+        return true;
+    } else {
+        console.log("Botão de próximo post não encontrado.");
+        return false;
+    }
+}
+
+// Loop automático com intervalo
+let interval = setInterval(() => {
+    const unsaved = unsavePost();
+    if (!unsaved) {
+        clearInterval(interval);
+        console.log("Todos os posts processados ou botão de unsave não encontrado.");
+        return;
+    }
+    setTimeout(() => {
+        nextPost();
+    }, 1000); // Espera 1 segundo antes de ir para o próximo post
+}, 2000); // Intervalo entre unsave e próximo post
