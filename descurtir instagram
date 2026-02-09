@@ -1,0 +1,94 @@
+// codigo para descurtir postagens do instagram em massa
+// para usar para excluir comentários, basta mudar os botões de Descurtir para Excluir
+
+(async function() {
+  const DELAY_CLICK = 100;        // Delay entre cliques nos ícones
+  const DELAY_AFTER_SELECT = 500; // Delay após clicar no botão "Selecionar"
+  const DELAY_AFTER_UNLIKE = 500; // Delay após clicar no pop-up "Descurtir"
+  const WAIT_BEFORE_LOOP = 10000; // Espera 30 segundos antes de nova iteração
+  const delay = ms => new Promise(res => setTimeout(res, ms));
+
+  let iteration = 0;
+
+  while (true) { // Loop contínuo
+    iteration++;
+    console.log(`\n🚀 Iniciando iteração #${iteration}...`);
+
+    // === Passo 1: clicar no botão "Selecionar/Cancelar" ===
+    const buttons = [...document.querySelectorAll('*')]
+      .filter(el => {
+        const style = window.getComputedStyle(el);
+        const text = el.textContent?.trim();
+        return ['Selecionar', 'Cancelar', 'Select', 'Auswählen'].includes(text) &&
+               style.display !== 'none' &&
+               style.visibility !== 'hidden' &&
+               style.pointerEvents !== 'none';
+      });
+
+    if (buttons.length > 0) {
+      let btn = buttons[0];
+      let clickable = btn;
+      while (clickable && !['BUTTON', 'A'].includes(clickable.tagName) && !clickable.onclick && clickable.getAttribute('role') !== 'button') {
+        clickable = clickable.parentElement;
+      }
+      if (clickable) {
+        clickable.click();
+        console.log('✅ Botão "Selecionar/Cancelar" clicado!');
+        await delay(DELAY_AFTER_SELECT);
+      } else {
+        console.log('⚠️ Botão clicável não encontrado.');
+      }
+    } else {
+      console.log('⚠️ Nenhum botão "Selecionar/Cancelar" encontrado.');
+    }
+
+    // === Passo 2: selecionar todos os ícones visíveis ===
+    const icons = [...document.querySelectorAll('div[data-bloks-name="ig.components.Icon"]')];
+    if (icons.length === 0) {
+      console.log('⚠️ Nenhum ícone encontrado.');
+    } else {
+      console.log(`✅ Encontrados ${icons.length} ícones. Selecionando todos...`);
+      let totalClicked = 0;
+      for (const icon of icons) {
+        const clickable = icon.closest('[role="button"]');
+        if (clickable) {
+          clickable.click();
+          totalClicked++;
+          // console.log(`✔️ Selecionado item ${totalClicked}`);
+          await delay(DELAY_CLICK);
+        }
+      }
+      console.log(`🎉 Todos os ${totalClicked} itens visíveis foram selecionados!`);
+    }
+
+    // === Passo 3 e 4: descurtir itens selecionados ===
+    const unlikeBtns = [...document.querySelectorAll('span')]
+      .filter(span => span.textContent.trim() === 'Descurtir' && span.style.color === 'rgb(237, 73, 86)');
+
+    if (unlikeBtns.length === 0) {
+      console.log('⚠️ Nenhum botão "Descurtir" principal encontrado nesta iteração.');
+    } else {
+      for (const mainUnlikeBtn of unlikeBtns) {
+        mainUnlikeBtn.click();
+        console.log('✅ Botão principal "Descurtir" clicado!');
+        await delay(DELAY_AFTER_UNLIKE);
+
+        const popupBtn = [...document.querySelectorAll('div._ap3a._aacp._aacw._aac-._aad6')]
+          .find(div => div.textContent.trim() === 'Descurtir');
+
+        if (popupBtn) {
+          popupBtn.click();
+          console.log('💔 Curtida removida com sucesso!');
+        } else {
+          console.log('⚠️ Botão "Descurtir" do pop-up não encontrado.');
+        }
+
+        await delay(DELAY_AFTER_UNLIKE);
+      }
+    }
+
+    // === Espera 30 segundos antes de nova iteração ===
+    console.log(`⏳ Esperando ${WAIT_BEFORE_LOOP / 1000} segundos antes de verificar novos itens...`);
+    await delay(WAIT_BEFORE_LOOP);
+  }
+})();
