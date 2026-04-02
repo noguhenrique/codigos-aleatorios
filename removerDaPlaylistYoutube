@@ -1,0 +1,90 @@
+(async function removeWatchLaterVideos() {
+  const SCROLL_DELAY = 800;
+  const ACTION_DELAY = () => 600 + Math.random() * 600;
+
+  const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+
+  async function scrollToBottom() {
+    console.log("🔽 Carregando todos os vídeos...");
+
+    let lastHeight = -1;
+
+    while (document.documentElement.scrollHeight !== lastHeight) {
+      lastHeight = document.documentElement.scrollHeight;
+      window.scrollTo(0, lastHeight);
+      await sleep(SCROLL_DELAY);
+    }
+
+    console.log("✅ Todos os vídeos carregados.");
+  }
+
+  function getVideos() {
+    return Array.from(document.querySelectorAll('ytd-playlist-video-renderer'));
+  }
+
+  function findRemoveButton() {
+    const items = Array.from(document.querySelectorAll('tp-yt-paper-item'));
+
+    return items.find(el => {
+      const text = el.innerText.toLowerCase();
+
+      return (
+        text.includes("remover") ||
+        text.includes("remove") ||
+        text.includes("watch later") ||
+        text.includes("assistir mais tarde")
+      );
+    });
+  }
+
+  async function removeAll() {
+    let videos = getVideos();
+
+    console.log(`🎬 ${videos.length} vídeos encontrados`);
+
+    for (let i = 0; i < videos.length; i++) {
+      const video = videos[i];
+
+      try {
+        const menuBtn = video.querySelector('ytd-menu-renderer yt-icon-button');
+
+        if (!menuBtn) {
+          console.log(`⚠️ Vídeo ${i + 1}: menu não encontrado`);
+          continue;
+        }
+
+        menuBtn.click();
+        await sleep(700);
+
+        let removeBtn = findRemoveButton();
+
+        if (!removeBtn) {
+          // tenta de novo com mais tempo
+          await sleep(1000);
+          removeBtn = findRemoveButton();
+        }
+
+        if (removeBtn) {
+          removeBtn.click();
+          console.log(`🗑️ Removido ${i + 1}/${videos.length}`);
+        } else {
+          console.log(`❌ Falhou no vídeo ${i + 1}`);
+        }
+
+        await sleep(ACTION_DELAY());
+
+      } catch (err) {
+        console.log(`Erro no vídeo ${i + 1}`, err);
+      }
+    }
+
+    console.log("🎉 Finalizado!");
+  }
+
+  async function run() {
+    await scrollToBottom();
+    await removeAll();
+  }
+
+  run();
+})();
